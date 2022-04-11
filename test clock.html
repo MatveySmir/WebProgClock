@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JS6</title>
+</head>
+<body>
+<canvas id="canvas" width="1920" height="1080"></canvas>
+<script type="text/javascript">
+function analogClock () {
+var oldSeconds = 0;
+var oldMinutes = 0;
+  function updateClock() {
+    var t = new Date();
+    var clockArms = [t.getHours(), t.getMinutes(), t.getSeconds()];
+    if (clockArms[2] == oldSeconds) return;
+    oldSeconds= clockArms[2];
+    oldMinutes= clockArms[1];
+    var canvas = document.getElementById("canvas");///ссылка на canvas
+    var ctx = canvas.getContext("2d");////режим рисования 2d
+    var x = Math.round(300);////вводим переменные
+    var y = Math.round(175);
+    var r = Math.round(150);
+
+    ctx.beginPath();
+    ctx.arc(x, y, r,0, 2 * Math.PI,false);////рисуем круг
+    ctx.stroke();///как окружность
+
+    var grd=ctx.createRadialGradient(x,y,0,x,y,r);///делаем градиент-цвет часов
+    grd.addColorStop(0.3,"#6d6eff");
+    grd.addColorStop(0.8,"#b1b2fa");
+    grd.addColorStop(1,"#d5d5f8");
+    ctx.fillStyle=grd;
+    ctx.fill();
+    ctx.font = "20px Arial"; //шрифт-размер чисел
+    ctx.lineWidth = 1.5;//контур часов
+    ctx.strokeStyle = '#0001d2';
+    ctx.stroke();
+    ctx.closePath();
+
+      ctx.beginPath();
+      ctx.arc(x, y, r+5,0, 2 * Math.PI,false);////рисуем круг
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = '#0001d2';
+      ctx.stroke();
+      ctx.closePath();
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = "middle";
+    var delta = 10; //переменная для размера отсечек
+    var u = Math.PI / 2;
+    var h = 1;
+    for (var i = 2; i < 62; i++) /// выставляем штрихи по кругу
+    {
+        ctx.beginPath();
+        var r1 = r - delta; // переменная для нахождения точки соприкосновение края часов и штриха
+        if (i % 5 != 2) {r1 += delta / 2;}///если штрих мелкий (кроме каждого 5-го), меняем длину
+        var x1 = x + Math.round(r1 * Math.cos(u)), //позиции делений циферблата
+            y1 = y - Math.round(r1 * Math.sin(u)),
+            x2 = x + Math.round(r * Math.cos(u)),
+            y2 = y - Math.round(r * Math.sin(u)),
+            x3 = x + Math.round((r1 - 12) * Math.cos(u)), //позиции чисел циферблата
+            y3 = y - Math.round((r1 - 12) * Math.sin(u));
+        ctx.strokeStyle = '#700000';
+        ctx.lineWidth = 2;
+        ctx.moveTo(x1, y1); //точка соприкосновение края часов и штриха
+        ctx.lineTo(x2, y2); //нарисовать деление
+        ctx.moveTo(x2, y2);
+        u += Math.PI / 30; //переменная для нахождения позиций делений циферблата
+        ctx.stroke();
+        ctx.closePath();
+
+        if (i % 5 == 2) //на каждый 5-й штрих
+        {
+            ctx.fillStyle = '#880e0e';
+            ctx.fillText(13 - h, x3, y3); //нарисовать цифры по часовому кругу
+            h++;
+            ctx.fill();
+        }
+    }
+
+        clockArms[1] += clockArms[2] / 60;//минута = час : 60
+        clockArms[0] += clockArms[1] / 60;//секунды = минута : 60
+        Strelka(ctx, x, y, clockArms[0] * 30,r / 1.7, 9, '#000000');//секунды
+        Strelka(ctx, x, y, clockArms[1] * 6,r / 1.3, 5, '#bdb300');//минуты
+        Strelka(ctx, x, y, clockArms[2] * 6,r-4, 2, '#ff0000');//часы
+
+      if (oldMinutes % 2 == 0) /// каждую четную минуту
+      {Kromka(ctx, x, y, clockArms[2] *6, r+9, 10,'#ff0007');
+          for (var i = 0; i <= oldSeconds; i++) {   ////цикл, заполняет квадратики от 0 до текущей позиции
+              {Kromka(ctx, x, y, (clockArms[2] -i)*6, r+9, 10, '#ff0007');}
+          }}
+      if (oldMinutes % 2 != 0)  //// нечетную
+      {Kromka(ctx, x, y, clockArms[2] *6, r+9, 10, '#0bea25');
+          for (var i = 0; i <= oldSeconds; i++) {   ////цикл, заполняет квадратики от от 0 до текущей позиции
+              {Kromka(ctx, x, y, (clockArms[2] -i)*6, r+9, 10, '#0bea25');}
+          }}
+  }
+            function Kromka(ctx, x, y, degrees,lenght, lineWidth, style)   ///рисование квадратика на кромке
+            {
+                ctx.save();
+                ctx.lineWidth = lineWidth;
+                ctx.translate(x, y);
+                ctx.rotate((degrees - 90) * Math.PI / 180); //ход секунды
+                ctx.strokeStyle = style;
+                ctx.beginPath();
+                ctx.moveTo(lenght, 0);
+                ctx.lineTo(165, 0);
+                ctx.stroke();
+                ctx.closePath();
+                ctx.restore();
+            }
+
+            function Strelka(ctx, x, y, degrees, lenght, lineWidth, style)   ///рисование стрелки
+            {
+            ctx.save();
+            ctx.lineWidth = lineWidth;
+            ctx.lineCap = 'round';//закругленные стрелки
+            ctx.translate(x, y);
+            ctx.rotate((degrees - 90) * Math.PI / 180); //ход секунды
+            ctx.strokeStyle = style;
+            ctx.beginPath();
+            ctx.moveTo(-5, 0);
+            ctx.lineTo(lenght, 0);
+            ctx.stroke();
+            ctx.closePath();
+            ctx.restore();
+            }
+    function initClock() {window.setInterval(updateClock, 100);} // обновления через 100 мсек
+    initClock();
+
+}
+onload = analogClock;
+</script>
+</body>
+</html>
